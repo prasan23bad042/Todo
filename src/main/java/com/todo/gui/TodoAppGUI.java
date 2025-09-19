@@ -114,13 +114,16 @@ public class TodoAppGUI extends JFrame {
         addButton.addActionListener(e -> addTodo());
         updateButton.addActionListener(e -> updateTodo());
         deleteButton.addActionListener(e -> deleteTodo());
-        refreshButton.addActionListener(e -> loadTodos()); 
+        refreshButton.addActionListener(e -> refreshTodos());
+        filterComboBox.addActionListener(e -> filterTodos()); 
 
         // Optional: load selected todo when row is clicked
         todoTable.getSelectionModel().addListSelectionListener(e -> loadSelectedTodo());
     }
 
     private void addTodo() {
+        int row = todoTable.getSelectedRow();
+        if(row==-1){
         String title = titleField.getText().trim();
         String description = descriptionArea.getText().trim();
         boolean completed = completedCheckBox.isSelected();
@@ -149,6 +152,10 @@ public class TodoAppGUI extends JFrame {
                     "Database Error",
                     JOptionPane.ERROR_MESSAGE);
         }
+    }
+    else{
+        JOptionPane.showMessageDialog(this, "row was already excited","Database Error",JOptionPane.WARNING_MESSAGE);
+    }
     }
 
     private void updateTodo() {
@@ -211,7 +218,7 @@ public class TodoAppGUI extends JFrame {
             return;
         }
 
-        int id = (int) tableModel.getValueAt(row, 0);
+        int id = (int) todoTable.getValueAt(row, 0);
         int confirm = JOptionPane.showConfirmDialog(this,
                 "Are you sure you want to delete this todo?",
                 "Confirm Delete",
@@ -239,6 +246,19 @@ public class TodoAppGUI extends JFrame {
             }
         }
     }
+    private void refreshTodos() {
+        loadTodos();
+        todoTable.clearSelection();
+        titleField.setText("");
+        descriptionArea.setText("");
+        completedCheckBox.setSelected(false);
+        filterComboBox.setSelectedItem("All");
+        JOptionPane.showMessageDialog(this,
+            "Todo list refreshed",
+            "Refreshed",
+            JOptionPane.INFORMATION_MESSAGE);
+    }
+    
 
     private void loadTodos() {
         try {
@@ -252,6 +272,24 @@ public class TodoAppGUI extends JFrame {
         }
     }
 
+    private void filterTodos(){
+        String filter = filterComboBox.getSelectedItem().toString();
+        if(filter.equals("All")){
+            loadTodos();
+            return;
+        }
+        try{
+            List<Todo> todos = todoDAO.filterTodos(filter);
+            updateTable(todos);
+        }
+        catch(SQLException e){
+            JOptionPane.showMessageDialog(this,
+                "Error Loading todos",
+                "Database Error",
+                JOptionPane.ERROR_MESSAGE
+            );
+        }
+    }
     private void loadSelectedTodo() {
         int row = todoTable.getSelectedRow();
         if (row != -1) {

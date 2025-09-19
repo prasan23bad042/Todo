@@ -10,11 +10,12 @@ import java.util.List;
 
 public class TodoAppDAO {
 
-    private static final String SELECT_ALL_TODOS = "SELECT * FROM todos ORDER BY created_at DESC";
+    private static final String SELECT_ALL_TODOS = "SELECT * FROM todos ORDER BY id";
     private static final String INSERT_TODO = "INSERT INTO todos(title, description, completed, created_at, updated_at) VALUES(?,?,?,?,?)";
     private static final String SELECT_TODO_BY_ID = "SELECT * FROM todos WHERE id = ?";
     private static final String UPDATE_TODO = "UPDATE todos SET title = ?, description = ?, completed = ?, updated_at = ? WHERE id = ?";
     private static final String DELETE_TODO = "DELETE FROM todos WHERE id = ?";
+    private static final String SELECT_TODO_BY_FILTER = "SELECT * FROM todos WHERE completed = ?";
     // Create a new todo in the database
     public int createTodo(Todo todo) throws SQLException {
         try (
@@ -95,6 +96,31 @@ public class TodoAppDAO {
             return rowsAffected > 0;
         }
     }
+
+    public List<Todo> filterTodos(String filter) throws SQLException{
+        List<Todo> todos = new ArrayList<>();
+        try(
+            Connection conn = DatabaseConnection.getDBConnection();
+            PreparedStatement stmt = conn.prepareStatement(SELECT_TODO_BY_FILTER);
+        )
+        {
+            if(filter.equals("Completed")){
+                stmt.setBoolean(1, true);
+            }
+            else{
+                stmt.setBoolean(1, false);
+            }
+            try(
+                ResultSet res = stmt.executeQuery()
+            ){
+                while(res.next()){
+                    todos.add(getTodoRow(res));
+                }
+                return todos;
+            }
+        }
+    }
+
 
     // Map a ResultSet row to a Todo object
     private Todo getTodoRow(ResultSet rs) throws SQLException {
