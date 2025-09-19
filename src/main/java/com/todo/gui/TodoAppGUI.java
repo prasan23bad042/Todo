@@ -25,7 +25,7 @@ public class TodoAppGUI extends JFrame {
         this.todoDAO = new TodoAppDAO();
         initializeComponents();
         setUpLayout();
-        setupEventListeners();   // ✅ Added this
+        setupEventListeners();   
         loadTodos();
     }
 
@@ -114,11 +114,41 @@ public class TodoAppGUI extends JFrame {
         addButton.addActionListener(e -> addTodo());
         updateButton.addActionListener(e -> updateTodo());
         deleteButton.addActionListener(e -> deleteTodo());
-        refreshButton.addActionListener(e -> loadTodos()); // ✅ loadTodos() on refresh
+        refreshButton.addActionListener(e -> loadTodos()); 
+
+        // Optional: load selected todo when row is clicked
+        todoTable.getSelectionModel().addListSelectionListener(e -> loadSelectedTodo());
     }
 
     private void addTodo() {
-        // Implement add logic here later
+        String title = titleField.getText().trim();
+        String description = descriptionArea.getText().trim();
+        boolean completed = completedCheckBox.isSelected();
+
+        if (title.isEmpty()) {
+            JOptionPane.showMessageDialog(this,
+                    "Title cannot be empty",
+                    "Input Error",
+                    JOptionPane.ERROR_MESSAGE);
+            return;
+        }
+
+        try {
+            Todo newTodo = new Todo(title, description);
+            newTodo.setCompleted(completed);
+            todoDAO.createTodo(newTodo);
+
+            JOptionPane.showMessageDialog(this,
+                    "Todo added successfully",
+                    "Success",
+                    JOptionPane.INFORMATION_MESSAGE);
+            loadTodos();
+        } catch (SQLException e) {
+            JOptionPane.showMessageDialog(this,
+                    "Error adding todo: " + e.getMessage(),
+                    "Database Error",
+                    JOptionPane.ERROR_MESSAGE);
+        }
     }
 
     private void updateTodo() {
@@ -141,18 +171,38 @@ public class TodoAppGUI extends JFrame {
         }
     }
 
+    private void loadSelectedTodo() {
+        int row = todoTable.getSelectedRow();
+        if (row != -1) {
+            String title = (String) tableModel.getValueAt(row, 1);
+            String description = (String) tableModel.getValueAt(row, 2);
+            boolean completed = (Boolean) tableModel.getValueAt(row, 3); // Use boolean, not Boolean object
+            titleField.setText(title);
+            descriptionArea.setText(description);
+            completedCheckBox.setSelected(completed); // directly set boolean
+        }
+    }
+
     private void updateTable(List<Todo> todos) {
         tableModel.setRowCount(0);  // clear existing rows
         for (Todo t : todos) {
             Object[] row = {
-                t.getId(),
-                t.getTitle(),
-                t.getDescription(),
-                t.isCompleted(),
-                t.getCreated_at(),
-                t.getUpdated_at()
+                    t.getId(),
+                    t.getTitle(),
+                    t.getDescription(),
+                    t.isCompleted(),
+                    t.getCreated_at(),
+                    t.getUpdated_at()
             };
             tableModel.addRow(row);
         }
+    }
+
+    // Optional: main method to run GUI
+    public static void main(String[] args) {
+        SwingUtilities.invokeLater(() -> {
+            TodoAppGUI gui = new TodoAppGUI();
+            gui.setVisible(true);
+        });
     }
 }
