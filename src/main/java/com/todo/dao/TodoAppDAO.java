@@ -14,6 +14,7 @@ public class TodoAppDAO {
     private static final String INSERT_TODO = "INSERT INTO todos(title, description, completed, created_at, updated_at) VALUES(?,?,?,?,?)";
     private static final String SELECT_TODO_BY_ID = "SELECT * FROM todos WHERE id = ?";
     private static final String UPDATE_TODO = "UPDATE todos SET title = ?, description = ?, completed = ?, updated_at = ? WHERE id = ?";
+    private static final String DELETE_TODO = "DELETE FROM todos WHERE id = ?";
     // Create a new todo in the database
     public int createTodo(Todo todo) throws SQLException {
         try (
@@ -80,6 +81,18 @@ public class TodoAppDAO {
         catch(SQLException e){
             e.printStackTrace();
             return false;
+        }
+    }
+
+    public boolean deleteTodo(int todoId) throws SQLException {
+        
+        try (
+                Connection conn = DatabaseConnection.getDBConnection();
+                PreparedStatement stmt = conn.prepareStatement(DELETE_TODO)
+        ) {
+            stmt.setInt(1, todoId);
+            int rowsAffected = stmt.executeUpdate();
+            return rowsAffected > 0;
         }
     }
 
