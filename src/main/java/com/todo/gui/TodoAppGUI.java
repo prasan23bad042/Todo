@@ -152,7 +152,53 @@ public class TodoAppGUI extends JFrame {
     }
 
     private void updateTodo() {
-        // Implement update logic here later
+        int row = todoTable.getSelectedRow();
+        if (row == -1) {
+            JOptionPane.showMessageDialog(this,
+                    "Please select a row to update",
+                    "Validation Error",
+                    JOptionPane.WARNING_MESSAGE);
+            return;
+        }
+
+        int id = (int) tableModel.getValueAt(row, 0);
+        String title = titleField.getText().trim();
+
+
+        if (title.isEmpty()) {
+            JOptionPane.showMessageDialog(this,
+                    "Title cannot be empty",
+                    "Validation Error",
+                    JOptionPane.WARNING_MESSAGE);
+            return;
+        }
+        try {
+        Todo todo = todoDAO.getTodoById(id);
+        if(todo!=null){
+            todo.setTitle(title);
+            todo.setDescription(descriptionArea.getText().trim());
+            todo.setCompleted(completedCheckBox.isSelected());
+            if(todoDAO.updateTodo(todo)){
+                JOptionPane.showMessageDialog(this,
+                        "Todo updated successfully",
+                        "Success",
+                        JOptionPane.INFORMATION_MESSAGE);
+                loadTodos();
+            }
+            else{
+                JOptionPane.showMessageDialog(this,
+                        "Failed to update todo",
+                        "Update Error",
+                        JOptionPane.ERROR_MESSAGE);
+            }
+        }
+        }
+        catch(SQLException e){
+            JOptionPane.showMessageDialog(this,
+                    "Error updating todo: ",
+                    "Database Error",
+                    JOptionPane.ERROR_MESSAGE);
+        }        
     }
 
     private void deleteTodo() {
